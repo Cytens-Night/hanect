@@ -1,7 +1,7 @@
 // models/match.js
 const mongoose = require("mongoose");
 const path = require("path");
-const User = require(path.join(__dirname, "../models/User"));
+const User = require(path.join(__dirname, "../models/user")); // Ensure lowercase
 
 
 const matchSchema = new mongoose.Schema(
