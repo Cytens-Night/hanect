@@ -1,38 +1,151 @@
-/* public/style.css */
+/* style.css */
 
-/* Basic reset */
+/* Reset & box-sizing */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
-/* Container spacing is handled by Bootstrap's .container, .row, .col, etc. */
+/* 
+  Body not used directly here, 
+  We'll let .auth-container fill the full screen 
+  so we can do a gradient behind it 
+*/
 
-/* Adjust the chat messages container */
-.messages {
-  height: 300px;
-  overflow-y: scroll;
-  background: #1d1d1e;
+/* 
+  Main container for login/signup 
+  -> covers full viewport 
+*/
+.auth-container {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(to bottom right, #a18cd1, #fbc2eb);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* White card */
+.auth-card {
+  background: #fff;
+  width: 350px;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  text-align: center;
+  position: relative;
+  /* Optionally add a smooth transition if we do fancy toggling */
+  transition: all 0.4s ease;
+}
+
+/* Logo container (top) */
+.auth-logo {
+  margin-bottom: 15px;
+}
+
+/* Titles */
+.auth-title {
+  font-size: 18px;
+  color: #8e44ad; /* Purple color text */
+  margin-bottom: 20px;
+}
+
+/* Input groups */
+.input-group {
+  margin-bottom: 15px;
   text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #444;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
   padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
 }
 
-.messages p {
-  margin: 5px 0;
+.input-group input:focus,
+.input-group select:focus {
+  border-color: #9b59b6;
 }
 
-/* If you want to tweak the .card or .btn styles, you can override them here */
-
-/* Example: Setting a background color for the body */
-body {
-  background: #181818; /* light gray typical of Bootstrap backgrounds */
+/* Icon placeholders in labels */
+.icon-placeholder {
+  background: #ccc;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: middle;
 }
 
-/* Example: Add your custom brand color overrides as needed */
-:root {
-  --brand-color: #551cf0; /* If you want to use a custom color later */
+/* Buttons */
+.btn-submit {
+  width: 100%;
+  background: #9b59b6;
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: background 0.3s ease;
 }
 
-/* Typically, rely on Bootstrap classes for layout, 
-   then add custom rules for truly unique styles. */
+.btn-submit:hover {
+  background: #8e44ad;
+}
+
+.forgot-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #9b59b6;
+  text-decoration: none;
+}
+
+.switch-text {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #999;
+}
+
+.switch-link {
+  color: #9b59b6;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* 
+  We'll hide #signupForm by default, 
+  but show #loginForm if data-mode='login',
+  and vice versa if data-mode='signup'.
+*/
+.form-section {
+  display: none;
+}
+
+.auth-container[data-mode="login"] #loginForm {
+  display: block;
+}
+
+.auth-container[data-mode="signup"] #signupForm {
+  display: block;
+}
+
+/* 
+  #userSection hidden until login success 
+  (we keep your existing style or just display: none).
+*/
