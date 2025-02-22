@@ -1,8 +1,6 @@
 /************************************************************
  * DOM ELEMENTS
  ************************************************************/
-console.log("Client.js is loading...");
-
 // Auth container + forms
 const authContainer = document.querySelector(".auth-container");
 const loginFormBox = document.getElementById("loginForm");
