@@ -293,10 +293,11 @@ if (satisfiedBtn) {
 function showUserSection() {
   // Hide auth container
   if (authContainer) authContainer.style.display = 'none';
-  // Show user section
-  if (userSection) userSection.style.display = 'block';
+  // Show user container
+  if (userSection) {
+    userSection.style.display = 'flex'; // to match .user-container's display approach
+  }
 
-  // If we have a displayUsername or userHeart, set them
   if (displayUsername && currentUser) {
     displayUsername.innerText = currentUser.username;
   }
@@ -304,6 +305,7 @@ function showUserSection() {
     userHeart.innerText = currentUser.heart;
   }
 }
+
 
 function showAuthSection() {
   // Show the auth container, revert to login mode by default

@@ -5,7 +5,6 @@
   <title>Hanect</title>
 
   <!-- Favicon / Site Icon -->
-  <!-- Make sure you have public/images/favicon.ico -->
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 
   <!-- Custom CSS -->
@@ -13,28 +12,16 @@
 </head>
 <body>
 
-  <!-- 
-    We’ll wrap login & signup forms in one container with a data attribute.
-    data-mode="login"  => show login form, hide signup
-    data-mode="signup" => show signup form, hide login
-  -->
+  <!-- Auth Container (login/signup) -->
   <div class="auth-container" data-mode="login">
-    <!-- White card -->
     <div class="auth-card">
-
-      <!-- LOGO -->
       <div class="auth-logo">
-        <!-- If you have 'public/images/logo.png', use it: -->
         <img src="images/logo.png" alt="Hanect Logo" style="width: 80px;"/>
-        <!-- Or text-based logo if you prefer:
-        <h1>HANECT</h1>
-        -->
       </div>
 
       <!-- LOGIN FORM -->
       <div id="loginForm" class="form-section">
         <h2 class="auth-title">LOGIN YOUR ACCOUNT</h2>
-
         <div class="input-group">
           <label for="loginUsername">
             <span class="icon-placeholder"></span>
@@ -42,7 +29,6 @@
           </label>
           <input type="text" id="loginUsername" placeholder="Enter your username or email"/>
         </div>
-
         <div class="input-group">
           <label for="loginPassword">
             <span class="icon-placeholder"></span>
@@ -50,11 +36,8 @@
           </label>
           <input type="password" id="loginPassword" placeholder="Enter your password"/>
         </div>
-
         <button id="loginBtn" class="btn-submit">LOGIN</button>
-
         <a href="#" class="forgot-link">Forgot Password? Click Here</a>
-
         <p class="switch-text">
           Don’t have an account?
           <a href="#" id="goToSignup" class="switch-link">Sign Up</a>
@@ -64,7 +47,6 @@
       <!-- SIGNUP FORM -->
       <div id="signupForm" class="form-section">
         <h2 class="auth-title">CREATE YOUR ACCOUNT</h2>
-
         <div class="input-group">
           <label for="signupUsername">
             <span class="icon-placeholder"></span>
@@ -72,7 +54,6 @@
           </label>
           <input type="text" id="signupUsername" placeholder="Choose a username"/>
         </div>
-
         <div class="input-group">
           <label for="signupPassword">
             <span class="icon-placeholder"></span>
@@ -80,7 +61,6 @@
           </label>
           <input type="password" id="signupPassword" placeholder="Choose a password"/>
         </div>
-
         <div class="input-group">
           <label for="signupGender">Gender</label>
           <select id="signupGender">
@@ -89,9 +69,7 @@
             <option value="female">Female</option>
           </select>
         </div>
-
         <button id="signupBtn" class="btn-submit">SIGN UP</button>
-
         <p class="switch-text">
           Already have an account?
           <a href="#" id="goToLogin" class="switch-link">Login</a>
@@ -100,15 +78,46 @@
     </div>
   </div>
 
-  <!-- 
-    The "user section" or chat interface, etc. 
-    For demonstration, we keep them hidden until logged in 
-  -->
-  <div id="userSection" style="display:none;">
-    <!-- Your existing user dashboard, chat UI, etc. -->
-    <!-- For brevity, not re-pasting everything here. 
-         Insert your userSection code from your old index.html 
-    -->
+  <!-- User Container (shown after login) -->
+  <div id="userSection" class="user-container" style="display: none;">
+    <div class="user-card">
+      <!-- Top row: username + logout -->
+      <div class="user-header">
+        <h2>Welcome, <span id="displayUsername"></span></h2>
+        <button id="logoutBtn" class="btn-logout">Logout</button>
+      </div>
+      <hr />
+
+      <!-- Half-heart & Match -->
+      <div class="half-heart-section">
+        <h3>Your Half-Heart</h3>
+        <div id="userHeart" class="user-heart"></div>
+        <button id="findMatchBtn" class="btn-match">Find Match</button>
+        <p id="matchStatus" class="match-status">Not matched yet.</p>
+      </div>
+      <hr />
+
+      <!-- Chat Container -->
+      <div id="chatContainer" class="chat-card" style="display: none;">
+        <h3>You are chatting with <span id="matchName" class="text-info"></span></h3>
+        <div id="typingIndicator" class="typing-indicator" style="display: none;">
+          Partner is typing...
+        </div>
+        <div id="messages" class="messages"></div>
+
+        <div class="input-group">
+          <input type="text" id="messageInput" placeholder="Type a message..." />
+          <button id="sendBtn" class="btn-send">Send</button>
+        </div>
+
+        <div class="input-group">
+          <input type="file" id="imageInput" accept="image/*" />
+          <button id="sendImageBtn" class="btn-send-image">Send Image</button>
+        </div>
+
+        <button id="satisfiedBtn" class="btn-satisfied">Satisfied</button>
+      </div>
+    </div>
   </div>
 
   <!-- Socket.IO -->
