@@ -30,14 +30,11 @@ const imageInput = document.getElementById('imageInput');
 const sendImageBtn = document.getElementById('sendImageBtn');
 const satisfiedBtn = document.getElementById('satisfiedBtn');
 
-let socket = null;        // Socket.io instance
-let currentUser = null;   // Store user info
-let matchedUserSocket = null; // The socket ID of the matched user (set once matched)
+let socket = null;
+let currentUser = null; // Data from the server for the logged-in user
+let matchedPartnerSocket = null; // We’d store partner’s socket ID if the server returns it
 
-
-// ------------------- AUTH FUNCTIONS ------------------- //
-
-// LOGIN
+// ------------------- AUTH FLOW ------------------- //
 loginBtn.addEventListener('click', async () => {
   const username = loginUsername.value.trim();
   const password = loginPassword.value.trim();
@@ -53,22 +50,20 @@ loginBtn.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-
     const data = await res.json();
     if (res.ok && data.success) {
       currentUser = data.user;
       showUserSection();
-      initSocket(); // Initialize Socket.io after login
+      initSocket();
     } else {
       alert(data.message || 'Login failed.');
     }
   } catch (err) {
     console.error(err);
-    alert('An error occurred during login.');
+    alert('Error during login.');
   }
 });
 
-// SIGNUP
 signupBtn.addEventListener('click', async () => {
   const username = signupUsername.value.trim();
   const password = signupPassword.value.trim();
@@ -85,22 +80,20 @@ signupBtn.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, gender })
     });
-
     const data = await res.json();
     if (res.ok && data.success) {
       currentUser = data.user;
       showUserSection();
-      initSocket(); // Initialize Socket.io after signup
+      initSocket();
     } else {
       alert(data.message || 'Signup failed.');
     }
   } catch (err) {
     console.error(err);
-    alert('An error occurred during signup.');
+    alert('Error during signup.');
   }
 });
 
-// LOGOUT
 logoutBtn.addEventListener('click', async () => {
   try {
     const res = await fetch('/api/logout');
@@ -119,13 +112,12 @@ logoutBtn.addEventListener('click', async () => {
   }
 });
 
-// ------------------- UI FUNCTIONS ------------------- //
+// ------------------- UI HELPERS ------------------- //
 function showUserSection() {
   authSection.style.display = 'none';
   userSection.style.display = 'block';
-
   displayUsername.innerText = currentUser.username;
-  userHeart.innerText = currentUser.heart || 'No heart assigned';
+  userHeart.innerText = currentUser.heart || 'No heart assigned.';
 }
 
 function showAuthSection() {
@@ -138,28 +130,22 @@ function showAuthSection() {
   signupGender.value = '';
 }
 
-// ------------------- SOCKET.IO & MATCHING ------------------- //
-
+// ------------------- SOCKET & MATCHING ------------------- //
 function initSocket() {
-  socket = io(); // Connect to Socket.IO (default path /socket.io)
+  socket = io();
 
   socket.on('connect', () => {
     console.log('Socket connected:', socket.id);
   });
 
-  // Chat message from other user
   socket.on('receiveMessage', (data) => {
-    const { from, text } = data;
-    addMessage(`Partner: ${text}`);
+    addMessage(`Partner: ${data.text}`);
   });
 
-  // Image from other user
   socket.on('receiveImage', (data) => {
-    const { from, image } = data;
-    addImage('Partner sent an image:', image);
+    addImage('Partner sent an image:', data.image);
   });
 
-  // Typing indicator
   socket.on('partnerTyping', () => {
     typingIndicator.style.display = 'block';
     setTimeout(() => {
@@ -167,58 +153,43 @@ function initSocket() {
     }, 2000);
   });
 
-  // Satisfied / match closed
   socket.on('matchClosed', () => {
-    alert('Both users have agreed to close the match. Chat ended.');
-    messagesDiv.innerHTML = '';
+    alert('Both users agreed to close the match!');
     chatContainer.style.display = 'none';
     matchStatus.innerText = 'Not matched yet.';
+    messagesDiv.innerHTML = '';
   });
 }
 
-
-// Find match with the back-end (REST example) 
 findMatchBtn.addEventListener('click', async () => {
   try {
     const res = await fetch('/api/find-unmatched');
     const data = await res.json();
-
-    if (res.ok && data.matchFound) {
+    if (data.matchFound) {
       matchStatus.innerText = 'Match found!';
-      chatContainer.style.display = 'block';
       matchNameElem.innerText = data.partner.username;
-      // In a real scenario, you might store the partner's _id (and possibly their socket ID if your server sets that up)
+      chatContainer.style.display = 'block';
+      // Typically you'd store partner's socket ID, or server does a room approach
     } else {
       matchStatus.innerText = 'No match found yet. Try again later.';
     }
   } catch (err) {
     console.error(err);
-    alert('Error while finding match.');
+    alert('Error finding match.');
   }
 });
 
-// ------------------- CHAT LOGIC ------------------- //
-
-// Send message
+// ------------------- CHAT FEATURES ------------------- //
 sendBtn.addEventListener('click', () => {
   const message = messageInput.value.trim();
   if (!message) return;
 
-  // Optional: block links
-  if (/(http:\/\/|https:\/\/|www\.)/i.test(message)) {
-    alert("Links are not allowed!");
-    return;
-  }
-
-  // Send to server
-  // (For a real system, you might need the partner's socket ID or a "room" approach)
-  socket.emit('sendMessage', { to: matchedUserSocket, text: message });
-
+  // For demonstration, we don't have a partner's socket ID
+  socket.emit('sendMessage', { to: matchedPartnerSocket, text: message });
   addMessage(`You: ${message}`);
   messageInput.value = '';
 });
 
-// Send image
 sendImageBtn.addEventListener('click', () => {
   const file = imageInput.files[0];
   if (!file) return;
@@ -226,27 +197,25 @@ sendImageBtn.addEventListener('click', () => {
   const reader = new FileReader();
   reader.onload = function(e) {
     const base64Image = e.target.result;
-    socket.emit('sendImage', { to: matchedUserSocket, image: base64Image });
+    socket.emit('sendImage', { to: matchedPartnerSocket, image: base64Image });
   };
   reader.readAsDataURL(file);
 
   imageInput.value = '';
 });
 
-// Typing indicator
 messageInput.addEventListener('input', () => {
-  socket.emit('typing', { to: matchedUserSocket });
+  socket.emit('typing', { to: matchedPartnerSocket });
 });
 
-// Satisfied
 satisfiedBtn.addEventListener('click', () => {
-  socket.emit('userSatisfied', { matchId: matchedUserSocket });
+  socket.emit('userSatisfied', { matchId: matchedPartnerSocket });
 });
 
 // ------------------- HELPER FUNCTIONS ------------------- //
 function addMessage(msg) {
   const p = document.createElement('p');
-  p.innerText = msg;
+  p.textContent = msg;
   messagesDiv.appendChild(p);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -259,7 +228,7 @@ function addImage(caption, base64Image) {
   const img = document.createElement('img');
   img.src = base64Image;
   img.style.maxWidth = '200px';
-  
+
   div.appendChild(p);
   div.appendChild(img);
   messagesDiv.appendChild(div);
