@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hanect - Matchmaking App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Logged-Out View: Login and Signup Forms -->
+    <div id="authSection" class="section">
+      <h1>Welcome to Hanect</h1>
+      <p>Please log in or sign up to continue.</p>
+
+      <!-- Login Form -->
+      <div class="form-card">
+        <h2>Login</h2>
+        <label for="loginUsername">Username:</label>
+        <input type="text" id="loginUsername" placeholder="Enter username" />
+
+        <label for="loginPassword">Password:</label>
+        <input type="password" id="loginPassword" placeholder="Enter password" />
+
+        <button id="loginBtn">Login</button>
+      </div>
+
+      <!-- Sign-Up Form -->
+      <div class="form-card">
+        <h2>Sign Up</h2>
+        <label for="signupUsername">Username:</label>
+        <input type="text" id="signupUsername" placeholder="Choose username" />
+
+        <label for="signupPassword">Password:</label>
+        <input type="password" id="signupPassword" placeholder="Choose password" />
+
+        <label for="signupGender">Gender:</label>
+        <select id="signupGender">
+          <option value="" disabled selected>Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+
+        <button id="signupBtn">Sign Up</button>
+      </div>
+    </div>
+
+    <!-- Logged-In View: Dashboard, Heart Display, Matching, Chat -->
+    <div id="userSection" class="section" style="display: none;">
+      <h2>Welcome, <span id="displayUsername"></span></h2>
+      <button id="logoutBtn" class="danger-btn">Logout</button>
+
+      <div class="heart-display">
+        <h3>Your Half-Heart</h3>
+        <div id="userHeart" class="heart-shape"></div>
+      </div>
+
+      <!-- Match Section: find a match, display info if matched -->
+      <div class="match-section">
+        <button id="findMatchBtn">Find Match</button>
+        <p id="matchStatus">Not matched yet.</p>
+      </div>
+
+      <!-- Chat Container (hidden until matched) -->
+      <div id="chatContainer" style="display: none;">
+        <h3>You are chatting with <span id="matchName"></span></h3>
+        <div id="typingIndicator" class="typing-indicator" style="display: none;">
+          Partner is typing...
+        </div>
+        <div id="messages" class="messages"></div>
+
+        <div class="chat-inputs">
+          <input type="text" id="messageInput" placeholder="Type a message..." />
+          <button id="sendBtn">Send</button>
+        </div>
+        
+        <div class="chat-images">
+          <input type="file" id="imageInput" accept="image/*" />
+          <button id="sendImageBtn">Send Image</button>
+        </div>
+
+        <button id="satisfiedBtn" class="success-btn">Satisfied</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Client JS -->
+  <script src="client.js"></script>
+</body>
+</html>
