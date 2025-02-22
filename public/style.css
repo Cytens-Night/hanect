@@ -13,7 +13,7 @@
 .messages {
   height: 300px;
   overflow-y: scroll;
-  background: #fff;
+  background: #1d1d1e;
   text-align: left;
   padding: 10px;
 }
@@ -26,12 +26,12 @@
 
 /* Example: Setting a background color for the body */
 body {
-  background: #f8f9fa; /* light gray typical of Bootstrap backgrounds */
+  background: #181818; /* light gray typical of Bootstrap backgrounds */
 }
 
 /* Example: Add your custom brand color overrides as needed */
 :root {
-  --brand-color: #e63946; /* If you want to use a custom color later */
+  --brand-color: #551cf0; /* If you want to use a custom color later */
 }
 
 /* Typically, rely on Bootstrap classes for layout, 
