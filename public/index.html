@@ -11,7 +11,9 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
+  <div class="auth-container" data-mode="login">
+    <h1 style="text-align: center; color: white;">Loading Hanect...</h1>
+  </div>
   <!-- Auth Container (login/signup) -->
   <div class="auth-container" data-mode="login">
     <div class="auth-card">
@@ -123,6 +125,6 @@
   <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
   <!-- Client JS -->
-  <script src="client.js"></script>
+  <script src="client.js" defer></script>
 </body>
 </html>

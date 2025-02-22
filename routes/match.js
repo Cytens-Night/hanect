@@ -1,44 +1,123 @@
-// routes/match.js (optional, or integrate into your socket logic)
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const User = require('../models/user');
+const Match = require("../models/Match");
+const User = require("../models/User");
 
-// Example route to get an unmatched user from the DB
-router.get('/find-unmatched', async (req, res) => {
+// ✅ Find or return existing match
+router.post("/find-unmatched", async (req, res) => {
+  const userId = req.user._id;
+
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not logged in.' });
+    // Check if user already has an active match
+    let existingMatch = await Match.findOne({
+      $or: [{ user1: userId }, { user2: userId }],
+      status: "active",
+    }).populate("user1 user2");
+
+    if (existingMatch) {
+      return res.json({
+        matchFound: true,
+        partner: existingMatch.user1._id.equals(userId)
+          ? existingMatch.user2
+          : existingMatch.user1,
+        matchId: existingMatch._id,
+      });
     }
 
-    // Find unmatched user in DB that has opposite gender & same pairIndex
-    const match = await User.findOne({
-      _id: { $ne: req.user._id },
-      gender: { $ne: req.user.gender },
-      pairIndex: req.user.pairIndex,
-      matchedWith: null
+    // Find an opposite-gender user who is not matched
+    const currentUser = await User.findById(userId);
+    const potentialMatch = await User.findOne({
+      gender: currentUser.gender === "male" ? "female" : "male",
+      _id: { $ne: userId },
     });
 
-    if (!match) {
-      return res.json({ matchFound: false });
+    if (!potentialMatch) {
+      return res.json({ matchFound: false, message: "No match found." });
     }
 
-    // We found a match, mark them matched
-    await User.findByIdAndUpdate(req.user._id, { matchedWith: match._id });
-    await User.findByIdAndUpdate(match._id, { matchedWith: req.user._id });
+    // Create a new match
+    const newMatch = new Match({
+      user1: userId,
+      user2: potentialMatch._id,
+    });
+    await newMatch.save();
 
-    return res.json({
+    res.json({
       matchFound: true,
-      partner: {
-        _id: match._id,
-        username: match.username,
-        gender: match.gender,
-        heart: match.heart
-      }
+      partner: potentialMatch,
+      matchId: newMatch._id,
     });
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Fetch chat history for a match
+router.get("/:matchId/chat", async (req, res) => {
+  try {
+    const match = await Match.findById(req.params.matchId).populate(
+      "chatHistory.sender"
+    );
+    if (!match) return res.status(404).json({ error: "Match not found" });
+
+    res.json({ success: true, chatHistory: match.chatHistory });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Store chat messages in MongoDB
+router.post("/:matchId/chat", async (req, res) => {
+  const { senderId, message, image } = req.body;
+
+  try {
+    const match = await Match.findById(req.params.matchId);
+    if (!match) return res.status(404).json({ error: "Match not found" });
+
+    match.chatHistory.push({
+      sender: senderId,
+      message: message || null,
+      image: image || null,
+    });
+
+    await match.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ Handle "Satisfied" button - Only closes if BOTH users confirm
+router.post("/satisfied", async (req, res) => {
+  const { matchId, userId } = req.body;
+
+  try {
+    const match = await Match.findById(matchId);
+    if (!match) return res.status(404).json({ error: "Match not found" });
+
+    // Store users who clicked "Satisfied"
+    if (!match.satisfiedUsers.includes(userId)) {
+      match.satisfiedUsers.push(userId);
+    }
+
+    // If both users clicked "Satisfied", close the match
+    if (
+      match.satisfiedUsers.includes(match.user1.toString()) &&
+      match.satisfiedUsers.includes(match.user2.toString())
+    ) {
+      match.status = "closed";
+      await match.save();
+      return res.json({ success: true, message: "Match closed for both users." });
+    }
+
+    await match.save();
+    res.json({ success: true, message: "Waiting for the other user to confirm." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

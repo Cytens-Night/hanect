@@ -1,6 +1,6 @@
 // models/user.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -27,27 +27,29 @@ const userSchema = new mongoose.Schema({
   },
   matchedWith: {
     type: mongoose.Schema.Types.ObjectId, // store the matched user's _id
-    ref: 'User',
-    default: null
-  }
+    ref: "User",
+    default: null,
+  },
 });
 
-// Pre-save hook to hash password if modified
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
+// ✅ Prevents model from being recompiled
+if (!mongoose.models.User) {
+  userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+      next();
+    } catch (err) {
+      next(err);
+    }
+  });
 
-// Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
-};
+  userSchema.methods.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+  };
 
-module.exports = mongoose.model('User', userSchema);
+  module.exports = mongoose.model("User", userSchema);
+} else {
+  module.exports = mongoose.models.User;
+}
