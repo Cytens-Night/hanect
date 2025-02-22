@@ -236,16 +236,35 @@ if (satisfiedBtn) {
  * HELPER FUNCTIONS
  ************************************************************/
 
-function showUserSection() {
-  authContainer.style.display = "none";
-  userSection.style.display = "block";
-  displayUsername.innerText = currentUser.username;
+// Fetch session data on page load to check if the user is logged in
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch("/api/session");
+    const data = await response.json();
+
+    if (data.success) {
+      console.log("✅ Session Restored:", data.user);
+      showUserSection(data.user);
+    } else {
+      console.log("❌ No Active Session.");
+      showAuthSection();
+    }
+  } catch (error) {
+    console.error("Session Check Failed:", error);
+  }
+});
+
+// Function to show authenticated user section
+function showUserSection(user) {
+  document.getElementById("authContainer").style.display = "none";
+  document.getElementById("userSection").style.display = "block";
+  document.getElementById("displayUsername").innerText = user.username;
 }
 
+// Function to show login/signup form
 function showAuthSection() {
-  authContainer.style.display = "flex";
-  authContainer.setAttribute("data-mode", "login");
-  userSection.style.display = "none";
+  document.getElementById("authContainer").style.display = "flex";
+  document.getElementById("userSection").style.display = "none";
 }
 
 function fetchChatHistory(matchId) {

@@ -18,14 +18,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ✅ Ensure MongoDB URI is properly loaded
+// ✅ Validate Required Environment Variables
 const mongoURI = process.env.MONGODB_URI;
-if (!mongoURI) {
-  console.error("❌ ERROR: MongoDB URI is missing! Check your .env file.");
+const sessionSecret = process.env.SESSION_SECRET;
+
+if (!mongoURI || !sessionSecret) {
+  console.error("❌ ERROR: Missing required environment variables (MONGODB_URI, SESSION_SECRET).");
   process.exit(1);
 }
 
-// ✅ Connect to MongoDB
+// ✅ Connect to MongoDB with Better Error Handling
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log(`✅ Connected to MongoDB at ${mongoURI}`))
   .catch(err => {
@@ -33,29 +35,51 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     process.exit(1);
   });
 
-// ✅ Logging Middleware
+// ✅ Improved Logging with Morgan & Winston
 app.use(morgan('dev'));
 
-// ✅ Setup Session Store with MongoDB
+const logger = winston.createLogger({
+  level: 'error',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log' }),
+  ],
+});
+
+// ✅ Secure Sessions with MongoDB Store
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'secretDevKey',
-  resave: false,
-  saveUninitialized: false,
+  secret: sessionSecret,
+  resave: false, // Prevents unnecessary session overwrites
+  saveUninitialized: false, // Prevents creating sessions for unauthenticated users
   store: MongoStore.create({
     mongoUrl: mongoURI,
-    ttl: 14 * 24 * 60 * 60 // 14 days expiration
-  })
+    ttl: 14 * 24 * 60 * 60, // 14 days expiration
+    autoRemove: 'native',
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true,
+    maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
+  }
 }));
 
-// ✅ Passport Initialization
+// ✅ Initialize Passport
 require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ✅ Serve Static Files (Frontend)
+// ✅ Middleware to Restore User Session
+app.use((req, res, next) => {
+  if (req.user) {
+    console.log(`🔵 Active Session: ${req.user.username}`);
+  }
+  next();
+});
+
+// ✅ Serve Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Body Parsers
+// ✅ Middleware for JSON & Form Handling
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -63,28 +87,53 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', authRoutes);
 app.use('/api', matchRoutes);
 
-// ✅ Serve index.html (Frontend Entry Point)
+// ✅ API Route to Check Session (Ensures User Stays Logged In)
+app.get('/api/session', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ success: true, user: req.user });
+  } else {
+    res.json({ success: false, message: "Not authenticated" });
+  }
+});
+
+// ✅ Serve Frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ Socket.io for Real-time Chat & Matching
+// ✅ Socket.IO for Real-time Chat & Matchmaking
+const activeUsers = new Map();
+
 io.on('connection', (socket) => {
-  console.log('🔵 A user connected:', socket.id);
+  console.log(`🔵 User Connected: ${socket.id}`);
+
+  socket.on('registerUser', (userId) => {
+    activeUsers.set(userId, socket.id);
+    console.log(`✅ User Registered: ${userId}`);
+  });
 
   socket.on('sendMessage', (data) => {
     const { to, text } = data;
-    io.to(to).emit('receiveMessage', { from: socket.id, text });
+    const recipientSocket = activeUsers.get(to);
+    if (recipientSocket) {
+      io.to(recipientSocket).emit('receiveMessage', { from: socket.id, text });
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('🔴 A user disconnected:', socket.id);
+    console.log(`🔴 User Disconnected: ${socket.id}`);
+    activeUsers.forEach((socketId, userId) => {
+      if (socketId === socket.id) {
+        activeUsers.delete(userId);
+      }
+    });
   });
 });
 
-// ✅ Error Handling Middleware
+// ✅ Improved Error Handling
 app.use((err, req, res, next) => {
   console.error("❌ ERROR:", err.stack);
+  logger.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
