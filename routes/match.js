@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Match = require("../models/Match");
-const User = require("../models/User");
+const User = require("../models/user");
 
 // ✅ Find or return existing match
 router.post("/find-unmatched", async (req, res) => {
