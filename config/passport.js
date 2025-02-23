@@ -3,18 +3,18 @@ const LocalStrategy = require("passport-local").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-const mongoose = require("mongoose");
+require("dotenv").config();
 
 module.exports = function (passport) {
-  // ✅ Local Strategy for Username or Email Login
+  // ✅ Local Strategy for Email or Username Login
   passport.use(
     new LocalStrategy(
-      { usernameField: "emailOrUsername" }, // Allow login with either email or username
-      async (emailOrUsername, password, done) => {
+      { usernameField: "usernameOrEmail" }, // Allow login with either email or username
+      async (usernameOrEmail, password, done) => {
         try {
           // Find user by email OR username
           const user = await User.findOne({
-            $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
+            $or: [{ email: usernameOrEmail }, { username: usernameOrEmail }],
           });
 
           if (!user) {
@@ -41,22 +41,31 @@ module.exports = function (passport) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.NODE_ENV === "production"
-        ? "https://hanect-service.onrender.com/auth/google/callback"
-        : "http://localhost:3000/auth/google/callback",
+        callbackURL: process.env.GOOGLE_CALLBACK_URL, // Use from .env to avoid issues
         passReqToCallback: true,
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (request, accessToken, refreshToken, profile, done) => {
         try {
           let user = await User.findOne({ googleId: profile.id });
 
           if (!user) {
+            // Assign a random heart
+            const heartPairs = [
+              { male: "❤️‍🕺(M1)", female: "❤️‍💃(F1)" },
+              { male: "❤️‍🕺(M2)", female: "❤️‍💃(F2)" },
+              { male: "❤️‍🕺(M3)", female: "❤️‍💃(F3)" },
+              { male: "❤️‍🕺(M4)", female: "❤️‍💃(F4)" },
+              { male: "❤️‍🕺(M5)", female: "❤️‍💃(F5)" },
+            ];
+            const randomIndex = Math.floor(Math.random() * heartPairs.length);
+            const heart = heartPairs[randomIndex].male; // Default to male heart
+
             user = new User({
               googleId: profile.id,
-              username: profile.displayName,
+              username: profile.displayName.replace(/\s+/g, "").toLowerCase(),
               email: profile.emails[0].value,
               gender: "not specified",
-              heart: null,
+              heart,
             });
 
             await user.save();
@@ -64,6 +73,7 @@ module.exports = function (passport) {
 
           return done(null, user);
         } catch (err) {
+          console.error("Google OAuth Error:", err);
           return done(err);
         }
       }

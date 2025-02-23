@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 const heartPairs = [
   { male: "❤️‍🕺(M1)", female: "❤️‍💃(F1)" },
@@ -15,7 +16,7 @@ const heartPairs = [
   { male: "❤️‍🕺(M5)", female: "❤️‍💃(F5)" },
 ];
 
-// ✅ Email Transporter (Make sure your .env file has correct EMAIL_USER & EMAIL_PASS)
+// ✅ Email Transporter (Ensure your .env file has correct EMAIL_USER & EMAIL_PASS)
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
@@ -125,7 +126,7 @@ router.post("/forgot-password", async (req, res) => {
     await user.save();
 
     // Send email
-    const resetURL = `http://localhost:3000/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     const mailOptions = {
       to: user.email,
       from: process.env.EMAIL_USER,
@@ -146,7 +147,10 @@ router.post("/reset-password/:token", async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
-    const user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired token." });
@@ -155,7 +159,7 @@ router.post("/reset-password/:token", async (req, res) => {
     // Hash the new password before saving
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
-    
+
     // Clear reset token
     user.resetToken = null;
     user.resetTokenExpiration = null;
@@ -173,10 +177,16 @@ router.get("/auth/google", passport.authenticate("google", { scope: ["profile", 
 
 router.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
-    res.redirect("/dashboard"); // Redirect to dashboard after login
-  }
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+    successRedirect: "/dashboard",
+  })
 );
+
+// ✅ Ensure environment variables for Google OAuth are correctly set
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.error("❌ ERROR: Missing Google OAuth credentials. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env.");
+  process.exit(1);
+}
 
 module.exports = router;
