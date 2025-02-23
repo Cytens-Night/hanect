@@ -10,9 +10,18 @@ const userSchema = new mongoose.Schema(
       required: true,
       maxlength: 30,
     },
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     password: {
       type: String,
       required: true,
+    },
+    googleId: {
+      type: String, // Store Google OAuth ID if user logs in with Google
+      default: null,
     },
     gender: {
       type: String, // 'male' or 'female'
@@ -29,6 +38,14 @@ const userSchema = new mongoose.Schema(
     matchedWith: {
       type: mongoose.Schema.Types.ObjectId, // store the matched user's _id
       ref: "User",
+      default: null,
+    },
+    resetToken: {
+      type: String, // Stores token for password reset
+      default: null,
+    },
+    resetTokenExpiration: {
+      type: Date, // Expiry for reset token
       default: null,
     },
   },

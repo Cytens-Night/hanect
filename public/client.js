@@ -1,7 +1,8 @@
 /************************************************************
  * DOM ELEMENTS
  ************************************************************/
-// Auth container + forms
+
+// Auth container & forms
 const authContainer = document.querySelector(".auth-container");
 const loginFormBox = document.getElementById("loginForm");
 const signupFormBox = document.getElementById("signupForm");
@@ -11,22 +12,29 @@ const goToSignupLink = document.getElementById("goToSignup");
 const goToLoginLink = document.getElementById("goToLogin");
 
 // Login elements
-const loginUsername = document.getElementById("loginUsername");
+const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
 const loginBtn = document.getElementById("loginBtn");
+const googleLoginBtn = document.getElementById("googleLoginBtn");
 
 // Signup elements
 const signupUsername = document.getElementById("signupUsername");
+const signupEmail = document.getElementById("signupEmail");
 const signupPassword = document.getElementById("signupPassword");
 const signupGender = document.getElementById("signupGender");
 const signupBtn = document.getElementById("signupBtn");
+
+// Forgot Password Elements
+const forgotPasswordLink = document.getElementById("forgotPassword");
+const resetEmailInput = document.getElementById("resetEmail");
+const resetPasswordBtn = document.getElementById("resetPasswordBtn");
 
 // After authentication, user section
 const userSection = document.getElementById("userSection");
 const displayUsername = document.getElementById("displayUsername");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Heart & matching
+// Matching
 const userHeart = document.getElementById("userHeart");
 const findMatchBtn = document.getElementById("findMatchBtn");
 const matchStatus = document.getElementById("matchStatus");
@@ -38,8 +46,6 @@ const typingIndicator = document.getElementById("typingIndicator");
 const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
-const imageInput = document.getElementById("imageInput");
-const sendImageBtn = document.getElementById("sendImageBtn");
 const satisfiedBtn = document.getElementById("satisfiedBtn");
 
 // Global variables
@@ -49,7 +55,7 @@ let matchedUserId = null;
 let matchId = null;
 
 /************************************************************
- * TOGGLE BETWEEN LOGIN & SIGNUP FORMS
+ * TOGGLE LOGIN/SIGNUP FORMS
  ************************************************************/
 
 if (goToSignupLink) {
@@ -72,11 +78,11 @@ if (goToLoginLink) {
 
 if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
-    const username = loginUsername.value.trim();
+    const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
 
-    if (!username || !password) {
-      alert("Please enter your username and password.");
+    if (!email || !password) {
+      alert("Please enter your email and password.");
       return;
     }
 
@@ -84,7 +90,7 @@ if (loginBtn) {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
@@ -103,16 +109,27 @@ if (loginBtn) {
 }
 
 /************************************************************
+ * GOOGLE LOGIN LOGIC
+ ************************************************************/
+
+if (googleLoginBtn) {
+  googleLoginBtn.addEventListener("click", async () => {
+    window.location.href = "/api/auth/google";
+  });
+}
+
+/************************************************************
  * SIGNUP LOGIC
  ************************************************************/
 
 if (signupBtn) {
   signupBtn.addEventListener("click", async () => {
     const username = signupUsername.value.trim();
+    const email = signupEmail.value.trim();
     const password = signupPassword.value.trim();
     const gender = signupGender.value;
 
-    if (!username || !password || !gender) {
+    if (!username || !email || !password || !gender) {
       alert("Please fill out all fields.");
       return;
     }
@@ -121,7 +138,7 @@ if (signupBtn) {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, gender }),
+        body: JSON.stringify({ username, email, password, gender }),
       });
 
       const data = await res.json();
@@ -140,6 +157,25 @@ if (signupBtn) {
 }
 
 /************************************************************
+ * PASSWORD RESET LOGIC
+ ************************************************************/
+
+if (forgotPasswordLink) {
+  forgotPasswordLink.addEventListener("click", () => {
+    const email = prompt("Enter your email to reset your password:");
+    if (email) {
+      fetch("/api/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => alert(data.message || "Check your email for reset link."));
+    }
+  });
+}
+
+/************************************************************
  * LOGOUT
  ************************************************************/
 
@@ -149,7 +185,6 @@ if (logoutBtn) {
       const res = await fetch("/api/logout");
       const data = await res.json();
       if (data.success) {
-        alert(data.message);
         currentUser = null;
         showAuthSection();
         if (socket) {
@@ -170,7 +205,7 @@ if (logoutBtn) {
 if (findMatchBtn) {
   findMatchBtn.addEventListener("click", async () => {
     try {
-      const res = await fetch("/api/find-unmatched", { method: "POST" });
+      const res = await fetch("/api/find-match", { method: "POST" });
       const data = await res.json();
 
       if (res.ok && data.matchFound) {
@@ -192,7 +227,7 @@ if (findMatchBtn) {
 }
 
 /************************************************************
- * CHAT LOGIC
+ * SOCKET.IO CHAT LOGIC
  ************************************************************/
 
 function initSocket() {
@@ -226,57 +261,19 @@ if (sendBtn) {
   });
 }
 
-if (satisfiedBtn) {
-  satisfiedBtn.addEventListener("click", () => {
-    socket.emit("userSatisfied", { matchId, userId: currentUser._id });
-  });
-}
-
 /************************************************************
  * HELPER FUNCTIONS
  ************************************************************/
 
-// Fetch session data on page load to check if the user is logged in
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const response = await fetch("/api/session");
-    const data = await response.json();
-
-    if (data.success) {
-      console.log("✅ Session Restored:", data.user);
-      showUserSection(data.user);
-    } else {
-      console.log("❌ No Active Session.");
-      showAuthSection();
-    }
-  } catch (error) {
-    console.error("Session Check Failed:", error);
-  }
-});
-
-// Function to show authenticated user section
-function showUserSection(user) {
-  document.getElementById("authContainer").style.display = "none";
-  document.getElementById("userSection").style.display = "block";
-  document.getElementById("displayUsername").innerText = user.username;
+function showUserSection() {
+  authContainer.style.display = "none";
+  userSection.style.display = "block";
+  displayUsername.innerText = currentUser.username;
 }
 
-// Function to show login/signup form
 function showAuthSection() {
-  document.getElementById("authContainer").style.display = "flex";
-  document.getElementById("userSection").style.display = "none";
-}
-
-function fetchChatHistory(matchId) {
-  fetch(`/api/match/${matchId}/chat`)
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        data.chatHistory.forEach((msg) => {
-          addMessage(`${msg.sender.username}: ${msg.message || "(Image sent)"}`);
-        });
-      }
-    });
+  authContainer.style.display = "flex";
+  userSection.style.display = "none";
 }
 
 function addMessage(msg) {

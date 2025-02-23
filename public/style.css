@@ -1,72 +1,69 @@
-/* style.css */
-
-/* style.css */
-
 /* Reset & box-sizing */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
 }
 
-/* 
-  Body not used directly here, 
-  We'll let .auth-container fill the full screen 
-  so we can do a gradient behind it 
-*/
-
-/* 
-  Main container for login/signup 
-  -> covers full viewport 
-*/
-.auth-container {
-  width: 100vw;
-  height: 100vh;
+/* Body */
+body {
   background: linear-gradient(to bottom right, #a18cd1, #fbc2eb);
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;
+}
+
+/* AUTH CONTAINER */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
 }
 
 /* White card */
 .auth-card {
   background: #fff;
-  width: 350px;
+  width: 400px;
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(0,0,0,0.1);
   text-align: center;
-  position: relative;
-  /* Optionally add a smooth transition if we do fancy toggling */
   transition: all 0.4s ease;
 }
 
-/* Logo container (top) */
-.auth-logo {
+/* Logo */
+.auth-logo img {
+  width: 80px;
   margin-bottom: 15px;
 }
 
 /* Titles */
 .auth-title {
   font-size: 18px;
-  color: #8e44ad; /* Purple color text */
+  color: #8e44ad;
   margin-bottom: 20px;
 }
 
 /* Input groups */
 .input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 15px;
-  text-align: left;
+  width: 100%;
 }
 
 .input-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 600;
+  font-weight: bold;
   color: #444;
+  margin-bottom: 5px;
 }
 
-.input-group input,
+.input-group input, 
 .input-group select {
   width: 100%;
   padding: 10px;
@@ -81,18 +78,7 @@
   border-color: #9b59b6;
 }
 
-/* Icon placeholders in labels */
-.icon-placeholder {
-  background: #ccc;
-  width: 14px;
-  height: 14px;
-  display: inline-block;
-  margin-right: 5px;
-  border-radius: 2px;
-  vertical-align: middle;
-}
-
-/* Buttons */
+/* Submit Button */
 .btn-submit {
   width: 100%;
   background: #9b59b6;
@@ -102,7 +88,6 @@
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
-  margin-top: 5px;
   transition: background 0.3s ease;
 }
 
@@ -110,31 +95,75 @@
   background: #8e44ad;
 }
 
-.forgot-link {
-  display: block;
+/* Forgot password and switch text */
+.forgot-password,
+.switch-text {
   margin-top: 10px;
   font-size: 14px;
   color: #9b59b6;
   text-decoration: none;
+  display: block;
 }
 
 .switch-text {
-  margin-top: 10px;
-  font-size: 14px;
   color: #999;
 }
 
 .switch-link {
   color: #9b59b6;
-  text-decoration: none;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-/* 
-  We'll hide #signupForm by default, 
-  but show #loginForm if data-mode='login',
-  and vice versa if data-mode='signup'.
-*/
+/* OR Divider */
+.or-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #999;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+  margin: 0 10px;
+}
+
+/* Google Sign-In Button */
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: white;
+  font-size: 16px;
+  font-weight: bold;
+  color: #444;
+  text-decoration: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.google-btn:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.google-logo {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+
+/* Form Sections */
 .form-section {
   display: none;
 }
@@ -147,13 +176,8 @@
   display: block;
 }
 
-/* 
-  #userSection hidden until login success 
-  (we keep your existing style or just display: none).
-*/
-
+/* USER DASHBOARD */
 .user-container {
-  /* same approach as auth-container: full screen, gradient, centered content */
   width: 100vw;
   height: 100vh;
   background: linear-gradient(to bottom right, #a18cd1, #fbc2eb);
@@ -164,28 +188,14 @@
 
 .user-card {
   background: #fff;
-  width: 400px; /* or whichever size you prefer */
+  width: 400px;
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(0,0,0,0.1);
   text-align: center;
-  position: relative;
 }
 
-/* Top row for user info and logout button */
-.user-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.user-header h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #8e44ad;
-}
-
+/* Logout Button */
 .btn-logout {
   background: #e74c3c;
   color: #fff;
@@ -194,11 +204,12 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
 .btn-logout:hover {
   background: #c0392b;
 }
 
-/* Half-heart section & button */
+/* Half-heart section */
 .half-heart-section {
   margin: 20px 0;
 }
@@ -220,6 +231,7 @@
   margin-top: 10px;
   cursor: pointer;
 }
+
 .btn-match:hover {
   background: #8e44ad;
 }
@@ -230,7 +242,7 @@
   color: #999;
 }
 
-/* Chat container styling */
+/* Chat Section */
 .chat-card {
   text-align: left;
   background: #fafafa;
@@ -245,6 +257,7 @@
   color: #8e44ad;
 }
 
+/* Typing Indicator */
 .typing-indicator {
   font-size: 14px;
   color: #999;
@@ -252,7 +265,7 @@
   margin-bottom: 5px;
 }
 
-/* Messages area */
+/* Messages */
 .messages {
   height: 200px;
   border: 1px solid #ccc;
@@ -266,7 +279,7 @@
   margin: 5px 0;
 }
 
-/* Input group for chat message, image send, etc. */
+/* Input Group */
 .input-group {
   display: flex;
   gap: 5px;
@@ -281,7 +294,7 @@
   border-radius: 4px;
 }
 
-/* Chat send buttons */
+/* Send Buttons */
 .btn-send,
 .btn-send-image {
   background: #9b59b6;
@@ -291,12 +304,13 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
 .btn-send:hover,
 .btn-send-image:hover {
   background: #8e44ad;
 }
 
-/* Satisfied button */
+/* Satisfied Button */
 .btn-satisfied {
   background: #2ecc71;
   color: #fff;
@@ -306,7 +320,14 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
 .btn-satisfied:hover {
   background: #27ae60;
 }
 
+/* RESPONSIVE DESIGN */
+@media screen and (max-width: 480px) {
+  .auth-card, .user-card {
+    width: 90%;
+  }
+}
